@@ -9,7 +9,7 @@ export class Database {
       user: process.env.DB_USER || 'postgres',
       host: process.env.DB_HOST || 'localhost',
       database: process.env.DB_NAME || 'url_shortener',
-      password: process.env.DB_PASSWORD || 'password',
+      password: process.env.DB_PASSWORD || 'postgres',
       port: parseInt(process.env.DB_PORT || '5432'),
       max: parseInt(process.env.DB_MAX_CONNECTIONS || '20'),
       idleTimeoutMillis: parseInt(process.env.DB_IDLE_TIMEOUT || '30000'),
@@ -34,22 +34,6 @@ export class Database {
         -- Create indexes for better performance
         CREATE INDEX IF NOT EXISTS idx_urls_short_code ON urls(short_code);
         CREATE INDEX IF NOT EXISTS idx_urls_created_at ON urls(created_at DESC);
-
-        -- Create function to update updated_at timestamp
-        CREATE OR REPLACE FUNCTION update_updated_at_column()
-        RETURNS TRIGGER AS $
-        BEGIN
-            NEW.updated_at = CURRENT_TIMESTAMP;
-            RETURN NEW;
-        END;
-        $ language 'plpgsql';
-
-        -- Create trigger to automatically update updated_at
-        DROP TRIGGER IF EXISTS update_urls_updated_at ON urls;
-        CREATE TRIGGER update_urls_updated_at
-            BEFORE UPDATE ON urls
-            FOR EACH ROW
-            EXECUTE FUNCTION update_updated_at_column();
       `;
 
       await this.pool.query(createTableQuery);
