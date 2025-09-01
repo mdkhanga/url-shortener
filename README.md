@@ -1,2 +1,2 @@
-# UrlShortner
-An Implementation of a UrlShortener
+# Url Shortner
+An Implementation of a Url shortener
