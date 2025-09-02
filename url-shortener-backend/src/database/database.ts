@@ -3,6 +3,7 @@ import { Url } from '../types';
 
 export class Database {
   private pool: Pool;
+  private isClosed = false;
 
   constructor() {
     this.pool = new Pool({
@@ -18,6 +19,8 @@ export class Database {
 
     this.initDatabase();
   }
+
+  
 
   private async initDatabase(): Promise<void> {
     try {
@@ -278,8 +281,19 @@ export class Database {
   }
 
   async close(): Promise<void> {
-    await this.pool.end();
+    if (this.isClosed) return;
+    
+    this.isClosed = true;
+    try {
+      if (this.pool) {
+        await this.pool.end();
+        console.log('Database pool closed successfully');
+      }
+    } catch (error) {
+      console.error('Error closing database pool:', error);
+      throw error;
+    }
   }
 }
 
-export const db = new Database();
+// export const db = new Database();

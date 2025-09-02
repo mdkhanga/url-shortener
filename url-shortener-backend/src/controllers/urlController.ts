@@ -1,10 +1,13 @@
 import { Request, Response } from 'express';
-import { db } from '../database/database';
+import { Database } from '../database/database';
 import { UrlValidator } from '../utils/urlValidator';
 import { ShortCodeGenerator } from '../utils/shortCodeGenerator';
 import { CreateUrlRequest, CreateUrlResponse, ApiResponse, Url } from '../types';
 
 export class UrlController {
+
+  static db = new Database()  ;
+
   static async createShortUrl(req: Request, res: Response): Promise<void> {
     try {
       const { url, customCode }: CreateUrlRequest = req.body;
@@ -42,7 +45,7 @@ export class UrlController {
         }
         
         // Check if custom code already exists
-        const existingUrl = await db.getUrlByShortCode(customCode);
+        const existingUrl = await UrlController.db.getUrlByShortCode(customCode);
         if (existingUrl) {
           res.status(409).json({
             success: false,
@@ -59,7 +62,7 @@ export class UrlController {
         
         do {
           shortCode = ShortCodeGenerator.generate();
-          const existing = await db.getUrlByShortCode(shortCode);
+          const existing = await UrlController.db.getUrlByShortCode(shortCode);
           if (!existing) break;
           
           attempts++;
@@ -75,7 +78,7 @@ export class UrlController {
       }
 
       // Create URL record
-      const urlRecord = await db.createUrl({
+      const urlRecord = await UrlController.db.createUrl({
         originalUrl: normalizedUrl,
         shortCode,
         clickCount: 0
@@ -116,7 +119,7 @@ export class UrlController {
         return;
       }
 
-      const urlRecord = await db.getUrlByShortCode(shortCode);
+      const urlRecord = await UrlController.db.getUrlByShortCode(shortCode);
 
       if (!urlRecord) {
         res.status(404).send(`
@@ -146,7 +149,7 @@ export class UrlController {
       }
 
       // Increment click count
-      await db.incrementClickCount(shortCode);
+      await UrlController.db.incrementClickCount(shortCode);
 
       // Redirect to original URL
       res.redirect(301, urlRecord.originalUrl);
@@ -166,7 +169,7 @@ export class UrlController {
       const limit = parseInt(req.query.limit as string) || 50;
       const offset = (page - 1) * limit;
 
-      const { urls, total } = await db.getAllUrls(limit, offset);
+      const { urls, total } = await UrlController.db.getAllUrls(limit, offset);
       const baseUrl = `${req.protocol}://${req.get('host')}`;
 
       const urlsWithShortUrl = urls.map(url => ({
@@ -209,7 +212,7 @@ export class UrlController {
         return;
       }
 
-      const deleted = await db.deleteUrl(shortCode);
+      const deleted = await UrlController.db.deleteUrl(shortCode);
 
       if (!deleted) {
         res.status(404).json({
@@ -245,7 +248,7 @@ export class UrlController {
         return;
       }
 
-      const urlRecord = await db.getUrlByShortCode(shortCode);
+      const urlRecord = await UrlController.db.getUrlByShortCode(shortCode);
 
       if (!urlRecord) {
         res.status(404).json({
