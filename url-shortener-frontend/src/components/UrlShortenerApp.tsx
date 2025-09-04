@@ -19,7 +19,7 @@ interface ApiError {
   status?: number;
 }
 
-const UrlShortenerApp: React.FC = () => {
+function UrlShortenerApp() {
   const [url, setUrl] = useState<string>('');
   const [customCode, setCustomCode] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
